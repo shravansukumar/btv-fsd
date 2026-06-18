@@ -47,11 +47,9 @@ npm install && npm run dev    # http://localhost:5173
 
 Backend: http://127.0.0.1:8000 · Frontend: http://localhost:5173
 
-## Submitting
+## The assignment
 
-Per the assignment: source code, run instructions, assumptions, brief design
-notes, and the requested tests. Where a task is a written answer (Tasks 3, 5, 6,
-9, 10, 11), add a `SOLUTION.md` (or inline comments) with your reasoning.
-
-Search the codebase for `TODO` to find each implementation task; the per-task
-file map is in `backend/README.md` and `frontend/README.md`.
+The tasks, requirements, and submission instructions are in
+[`ASSIGNMENT-DESCRIPTION.md`](./ASSIGNMENT-DESCRIPTION.md). Search the codebase
+for `TODO` to find each implementation task; the per-task file map is in
+`backend/README.md` and `frontend/README.md`.
