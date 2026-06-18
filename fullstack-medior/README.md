@@ -28,17 +28,21 @@ containers. Stop with `Ctrl-C`; reset everything (including the DB) with
 
 ## Quick start (without Docker)
 
+Run the apps on your host. The simplest database option is SQLite (no services
+to start); see `backend/README.md` for using Postgres instead.
+
 ```bash
-# Backend (see backend/README.md; set USE_SQLITE=1 to skip Postgres entirely)
+# Backend — uses SQLite, so no database service is needed
 cd backend
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt && cp .env.example .env
-docker compose up -d && python manage.py migrate && python manage.py seed
-python manage.py runserver
+pip install -r requirements.txt
+cp .env.example .env          # then set USE_SQLITE=1 in .env
+python manage.py migrate && python manage.py seed
+python manage.py runserver    # http://127.0.0.1:8000
 
 # Frontend (new terminal)
 cd frontend
-npm install && npm run dev
+npm install && npm run dev    # http://localhost:5173
 ```
 
 Backend: http://127.0.0.1:8000 · Frontend: http://localhost:5173

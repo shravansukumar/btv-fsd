@@ -1,10 +1,18 @@
-__# Medior Full-Stack Developer Technical Assessment
+# Medior Full-Stack Developer Technical Assessment
 
 ## Overview
 
 This assessment is designed to evaluate your ability to maintain and extend an existing full-stack application.
 
 A working starter repository is provided (see `README.md`). The Django project, database models, migrations, seed data, and a React app with a configured test runner are already in place and run as-is. Your job is to implement the tasks below within it — search the codebase for `TODO` to find each one.
+
+### Getting Started
+
+**Fork this repository and do all of your work in your fork.** Commit regularly with clear messages — we review your commit history alongside the final result, so we can see how you worked, not just where you ended up. When you are done, share the link to your forked repository (make sure we have access) as your submission.
+
+### Use of AI
+
+You are welcome — and encouraged — to use AI tools and coding agents (Claude Code, Copilot, ChatGPT, etc.) however you normally would. We are not testing whether you can write boilerplate from memory; we are testing your judgment in directing these tools and reviewing what they produce. Because of that, please include with your submission the key prompts you used and a short note on where the agent got something wrong and how you caught and corrected it. An honest "the agent produced X, which was wrong because Y, so I changed it to Z" is exactly the signal we value most — far more than a polished result with no explanation. You remain fully responsible for every line you submit, so make sure you understand it and can defend it in a follow-up conversation.
 
 ### Stack
 
@@ -27,11 +35,17 @@ A working starter repository is provided (see `README.md`). The Django project, 
 
 Please provide:
 
-- Your changes to the starter repository (source code)
+- A link to your forked repository containing all your work
 - Any assumptions made
 - Brief explanation of design decisions
 - Tests where requested
 - For the written-answer tasks, your reasoning (inline or in a `SOLUTION.md`)
+
+### A Note on This Assignment (V1)
+
+This is the first version of this assessment, and we are still refining it. If you run into anything that looks like a setup problem, a broken or unclear instruction, a typo, or an unintentional bug in the tooling, please let us know — flagging it genuinely helps us improve the assignment and will never count against you.
+
+One caveat: some code in the starter repo is *intentionally* imperfect because reviewing and critiquing it is part of a task (for example, the endpoint in Task 9). You don't need to report those — that's the exercise.
 
 ---
 
@@ -106,7 +120,7 @@ Prevent creating appointments in the past.
 ```json
 {
   "patient": 1,
-  "scheduled_at": "2026-01-01T10:00:00Z"
+  "scheduled_at": "2027-01-01T10:00:00Z"
 }
 ```
 
@@ -115,7 +129,7 @@ Prevent creating appointments in the past.
 ```json
 {
   "patient": 1,
-  "scheduled_at": "2024-01-01T10:00:00Z"
+  "scheduled_at": "2025-01-01T10:00:00Z"
 }
 ```
 
@@ -168,11 +182,11 @@ If you complete Task 1, this returns live data; otherwise mock it.
 
 Implement the component stubbed at `frontend/src/components/PatientSearch.jsx`. It should:
 
-- Displays a search input
-- Calls the API while typing
-- Shows loading state
-- Displays results
-- Handles API errors gracefully
+- Display a search input
+- Call the API while typing
+- Show a loading state
+- Display results
+- Handle API errors gracefully
 
 ### Example UI
 
@@ -238,7 +252,8 @@ function PatientList() {
 
 ## Task 6 – State Management Discussion
 
-The application contains:
+This is a hypothetical design question — none of the state below exists in the
+starter repo yet. Imagine the frontend grows to manage:
 
 - Logged-in user information
 - Feature flags
@@ -294,7 +309,9 @@ Use:
 
 ## Task 9 – API Design Review
 
-You discover the following endpoint:
+While working in the codebase you find this endpoint (implemented in
+`backend/appointments/views.py` as `update_status`, routed at
+`backend/appointments/urls.py`):
 
 ```http
 POST /api/appointments/update-status
@@ -309,10 +326,14 @@ Request body:
 }
 ```
 
+It works for the happy path, but it was written quickly. Review the actual
+implementation in the repo.
+
 ### Questions
 
 1. Is this endpoint RESTful?
-2. What concerns do you have with the design?
+2. What concerns do you have with the design **and the implementation**? Consider
+   what happens with malformed input, unknown IDs, and invalid status values.
 3. How would you redesign it?
 4. Which HTTP method(s) would you use?
 
@@ -384,6 +405,32 @@ Improve:
 - Validation
 
 Explain any decisions you make.
+
+---
+
+# Part 5 – Security
+
+## Task 12 – Authentication & Authorization Scope
+
+The API currently has no authentication — every endpoint is public. Suppose you
+were asked to add an authentication and authorization system.
+
+The endpoints that exist today are:
+
+- `GET /api/patients` — search/list patients
+- `GET /api/appointments` — list appointments
+- `POST /api/appointments` — create an appointment
+- `POST /api/appointments/update-status` — change an appointment's status
+
+### Questions
+
+1. Which of these endpoints should require authentication, and which (if any)
+   should stay public? Explain your reasoning.
+2. Beyond authentication (*who* you are), what authorization rules (*what you
+   are allowed to do*) would each endpoint need — for example, in a multi-clinic
+   setup where a user should only see their own clinic's data?
+3. What clarifying questions would you ask the product owner before implementing
+   this?
 
 ---
 

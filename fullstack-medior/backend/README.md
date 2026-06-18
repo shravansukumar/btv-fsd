@@ -4,10 +4,14 @@ Starter project for the technical assessment. The `Patient` and `Appointment`
 models, migrations, admin, a seed command, and stubbed API views are already in
 place. The feature work lives in clearly-marked `TODO` blocks.
 
+> Prefer the one-command setup? Run the whole stack with Docker instead — see
+> the repo-root `README.md` (`docker compose up --build`). The steps below are
+> for running the backend directly on your host.
+
 ## Requirements
 
 - Python 3.10+
-- PostgreSQL (via Docker, or your own). SQLite fallback available — see below.
+- A database: SQLite (zero setup) or PostgreSQL — see below.
 
 ## Setup
 
@@ -20,16 +24,25 @@ cp .env.example .env
 
 ### Database
 
-**Option A — Postgres (matches the assignment stack):**
+**Option A — SQLite (simplest, no services):** set `USE_SQLITE=1` in `.env`,
+then:
 
 ```bash
-docker compose up -d        # starts Postgres on :5432
 python manage.py migrate
-python manage.py seed       # synthetic demo data
+python manage.py seed        # synthetic demo data
 ```
 
-**Option B — SQLite (no Docker):** set `USE_SQLITE=1` in `.env`, then
-`migrate` + `seed` as above.
+**Option B — Postgres (matches the assignment stack):** start just the database
+from the repo root, then point Django at it. The container publishes Postgres on
+host port **5433**, so set `USE_SQLITE=0` and `POSTGRES_PORT=5433` in `.env`.
+
+```bash
+(cd .. && docker compose up -d db)   # Postgres on 127.0.0.1:5433
+python manage.py migrate
+python manage.py seed                # synthetic demo data
+```
+
+(Using your own local Postgres instead? Set `POSTGRES_*` in `.env` to match it.)
 
 ### Run
 
