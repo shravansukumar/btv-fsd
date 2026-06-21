@@ -83,4 +83,51 @@ Before implementing authentication and authorization, I would clarify the follow
 * Are there any regulatory or compliance requirements (e.g. GDPR or healthcare-specific regulations) that affect access to patient data?
 * Should clinic administrators be able to access data across multiple clinics, or should all access remain strictly clinic-scoped?
 
+## TASK 11 - Refactoring
+
+The original function has multiple nested `if` statements, which makes it harder to read and maintain. It also silently returns `None` if validation fails, which makes error handling unclear.
+
+I would refactor it by using early validation checks and raising meaningful validation errors. This makes the function easier to read and gives the API layer clear errors to return to the client.
+
+```python
+from django.utils import timezone
+from rest_framework import serializers
+
+
+def create_appointment(patient, scheduled_at):
+    if not patient:
+        raise serializers.ValidationError({
+            "patient": "Patient is required."
+        })
+
+    if not scheduled_at:
+        raise serializers.ValidationError({
+            "scheduled_at": "Scheduled date and time is required."
+        })
+
+    if scheduled_at <= timezone.now():
+        raise serializers.ValidationError({
+            "scheduled_at": "You cannot create appointments for past dates!"
+        })
+
+    return Appointment.objects.create(
+        patient=patient,
+        scheduled_at=scheduled_at,
+        status="scheduled",
+    )
+```
+
+### Explanation
+
+The main decision here is to replace the nested `if` statements with guard clauses. This improves readability because each invalid case is handled immediately, and the successful path is left at the bottom of the function.
+
+I also changed the error handling so that the function raises `serializers.ValidationError` instead of returning a generic string like `"Check inputs"`. This follows DRF conventions and allows the API to return meaningful validation errors to the frontend.
+
+The validation checks are also separated so the client can understand exactly what went wrong:
+
+* If `patient` is missing, the API returns an error for `patient`.
+* If `scheduled_at` is missing, the API returns an error for `scheduled_at`.
+* If `scheduled_at` is in the past, the API returns a clear validation error.
+
+This makes the function easier to maintain and makes the API behavior more predictable. Also, just like task #2, in a real world implementation, I would put this validation inside the serializer itself.
 
