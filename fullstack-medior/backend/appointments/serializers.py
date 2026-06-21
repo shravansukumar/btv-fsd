@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import Appointment, Patient
-
+from django.utils import timezone
 
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,3 +26,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
     #   def validate_scheduled_at(self, value):
     #       ...
     # ------------------------------------------------------------------
+    def validate_scheduled_at(self, value):
+        if value <= timezone.now():
+            raise serializers.ValidationError("You cannot create appointments for past dates! ")
+        return value
