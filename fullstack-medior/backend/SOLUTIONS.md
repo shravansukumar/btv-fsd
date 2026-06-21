@@ -131,3 +131,137 @@ The validation checks are also separated so the client can understand exactly wh
 
 This makes the function easier to maintain and makes the API behavior more predictable. Also, just like task #2, in a real world implementation, I would put this validation inside the serializer itself.
 
+
+## TASK 9 - API Design Review
+
+### Is this endpoint RESTful?
+
+I would say this endpoint is not fully RESTful.
+
+The current endpoint is:
+
+```text
+POST /api/appointments/update-status
+```
+
+The issue here is that the URL is action-based. It describes an operation, `update-status`, rather than identifying the resource being updated. In a more RESTful design, the endpoint should point to the appointment resource itself, and the HTTP method should describe the action.
+
+A better endpoint would be something like:
+
+```text
+PATCH /api/appointments/123
+```
+
+or, if we only want to update the appointment status:
+
+```text
+PATCH /api/appointments/123/status
+```
+
+### Concerns With the Current Design and Implementation
+
+There are a few concerns with the current implementation.
+
+First, the code directly accesses values from `request.data`:
+
+```python
+appointment_id = request.data["appointment_id"]
+status = request.data["status"]
+```
+
+If either `appointment_id` or `status` is missing from the request body, this will raise a `KeyError` and likely return a 500 error. This is not ideal because malformed client input should return a proper `400 Bad Request` response.
+
+Second, the code uses:
+
+```python
+appointment = Appointment.objects.get(id=appointment_id)
+```
+
+If the appointment ID does not exist, Django will raise `Appointment.DoesNotExist`. Again, without proper handling, this can result in a 500 error instead of a clear `404 Not Found` response.
+
+Third, there is no validation for the `status` value. This means the API may accept any value, even if the allowed statuses are only something like `"scheduled"`, `"completed"`, or `"cancelled"`. This can lead to invalid data being stored in the database.
+
+Another issue is that there is no serializer being used here. In DRF, serializers are the better place to validate request data and return meaningful validation errors. This would make the endpoint cleaner and easier to maintain.
+
+### How I Would Redesign It
+
+I would redesign this by making the appointment ID part of the URL instead of passing it in the request body.
+
+For example:
+
+```text
+PATCH /api/appointments/123/status
+```
+
+Request body:
+
+```json
+{
+  "status": "completed"
+}
+```
+
+This makes the API clearer because the URL identifies the appointment being updated, and the request body only contains the field that needs to change.
+
+I would also add a serializer to validate the status value before saving it.
+
+Example:
+
+```python
+class AppointmentStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Appointment
+        fields = ["status"]
+
+    def validate_status(self, value):
+        allowed_statuses = ["scheduled", "completed", "cancelled"]
+
+        if value not in allowed_statuses:
+            raise serializers.ValidationError(
+                "Invalid status value."
+            )
+
+        return value
+```
+
+Then the view could look like this:
+
+```python
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+
+@api_view(["PATCH"])
+def update_appointment_status(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id)
+
+    serializer = AppointmentStatusUpdateSerializer(
+        appointment,
+        data=request.data,
+        partial=True,
+    )
+
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    return Response(serializer.data)
+```
+
+This is better because:
+
+* Missing or malformed input returns a proper validation error.
+* Unknown appointment IDs return `404 Not Found`.
+* Invalid status values are rejected before saving.
+* The validation logic is handled through a DRF serializer.
+* The endpoint is more RESTful because it updates a specific appointment resource.
+
+### Which HTTP Method Would I Use?
+
+I would use `PATCH` here.
+
+The reason is that we are only updating one field, which is the appointment status. `PATCH` is generally used for partial updates.
+
+If the API was replacing the full appointment object, then `PUT` would make more sense. But for only updating the status, `PATCH` is the better choice.
+
+
