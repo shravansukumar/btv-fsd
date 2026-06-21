@@ -1,7 +1,9 @@
 Django==5.0.6
 djangorestframework==3.15.1
 django-cors-headers==4.4.0
-psycopg2-binary==2.9.9
+# Had issues with version compatibility. Hence bumped the version for psycopg2. This does not affect my project as I am using sqlite
+#psycopg2-binary==2.9.9
+psycopg2-binary>=2.9.10
 python-dotenv==1.0.1
 
 # Testing (Task 7) — pytest is optional, Django's TestCase also works.

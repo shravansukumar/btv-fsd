@@ -1,10 +1,15 @@
 from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.filters import SearchFilter
 
 from .models import Appointment, Patient
 from .serializers import AppointmentSerializer, PatientSerializer
 
+#from django.db.models import Q
+
+class PatientSearchFilter(SearchFilter):
+    search_param = "q"
 
 class PatientListView(generics.ListAPIView):
     """GET /api/patients
@@ -13,10 +18,26 @@ class PatientListView(generics.ListAPIView):
     """
 
     serializer_class = PatientSerializer
+    filter_backends = [PatientSearchFilter]
+    search_fields = ["name","email"]
 
     def get_queryset(self):
         queryset = Patient.objects.all().order_by("name")
-
+        
+        # -----------------------------------------------------------------------
+        # I have given two solutions, one below is manually picking up the query params and then query the DB from the models.
+        # I felt this was not the answer expected in the assignement, and hence, went with adding SearchFilter & filter backends.
+        # The current approach was DRF friendly approach. 
+        # -----------------------------------------------------------------------
+        """search_query = self.request.query_params.get('q')
+        
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) |
+                Q(email__icontains=search_query)
+          )
+        """        
+                
         # ------------------------------------------------------------------
         # TASK 1 — Search endpoint
         #
@@ -36,7 +57,6 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
 
     queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
-
 
 # ----------------------------------------------------------------------------
 # This endpoint is the subject of TASK 9 (API Design Review). It works for the
