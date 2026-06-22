@@ -6,6 +6,14 @@ Write a test verifying that appointments cannot be created in the past.
 You may use Django's TestCase (below) or pytest — both are accepted. A starter
 is left here; replace/extend it with your implementation.
 """
+
+"""
+⚠ DISCLOSURE: I wanted to learn more about testing with Django Test cases, so I prompted AI with giving an overview of the test framework (Django test) 
+and how it works for my understanding.
+After that, I also prompted the AI for generating some test cases given the test conditions. I tried with a few and have left one here for reference. 
+(Same for frontend tests as well).
+"""
+
 from django.test import TestCase
 from rest_framework.test import APIClient
 from django.utils import timezone

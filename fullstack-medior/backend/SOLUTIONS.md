@@ -1,3 +1,10 @@
+<!---
+
+⚠ DISCLOSURE: I have used AI to sanitize sentenses, to check for spelling mistakes, grammar and markdown formatting. 
+(Same for frontend solutions as well)
+
+-->
+
 ## TASK 3 - API Performance Review
 
 ### The Issue

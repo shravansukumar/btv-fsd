@@ -41,7 +41,7 @@ export default function PatientSearch() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/patients?q=${encodeURIComponent(searchQuery)}`,
+        `/api/patients?q=${encodeURIComponent(searchQuery)}`,
         { signal: controller.signal }
       );
 
