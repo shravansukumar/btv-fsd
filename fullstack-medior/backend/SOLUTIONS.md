@@ -265,3 +265,92 @@ The reason is that we are only updating one field, which is the appointment stat
 If the API was replacing the full appointment object, then `PUT` would make more sense. But for only updating the status, `PATCH` is the better choice.
 
 
+## TASK 10 - Production Maintenance Scenario
+
+### Investigation
+
+I would start by understanding where the slowness is coming from. The issue could be in different places, such as the database query, the backend API response time, the amount of data being transferred, or the frontend rendering too many records at once.
+
+Since the patient list has around 50,000 patients, I would first check whether the API is returning all patients in one response. If that is the case, then both the backend and frontend can become slow. The backend has to fetch and serialize a large amount of data, the network has to transfer a large response, and the frontend has to render a large list.
+
+I would inspect metrics such as:
+
+* API response time
+* Database query time
+* Number of database queries per request
+* Size of the API response
+* Time spent serializing the response
+* Frontend rendering time
+* Browser network timing
+* Error rates and slow request logs
+
+I would also check whether there are any N + 1 query problems, similar to Task 3. If related objects are being accessed for each patient without using `select_related` or `prefetch_related`, then the number of database queries could grow quickly.
+
+### Backend Optimizations
+
+The first backend improvement I would make is pagination. The API should not return all 50,000 patients in one response. Instead, it should return a limited number of records per request, for example 25, 50, or 100 patients at a time.
+
+For example, the API could support:
+
+```text
+GET /api/patients?page=1&page_size=50
+```
+
+This keeps the response smaller and makes the API faster.
+
+I would also look at the database queries. If the patient list is ordered by name or searched by name/email, then the database should have suitable indexes on the fields being searched or sorted. For example, if the endpoint supports searching patients by name or email, indexes on those fields could improve lookup performance.
+
+I would also check whether the API is fetching only the fields that are needed for the list page. If the frontend only needs `id`, `name`, and `email`, then the backend should avoid loading unnecessary data. This can be done by keeping the serializer small for list views.
+
+If the endpoint includes related data, I would use query optimizations such as:
+
+```python
+select_related()
+```
+
+for foreign key relationships, or:
+
+```python
+prefetch_related()
+```
+
+for many-to-many or reverse relationships.
+
+Caching could also be useful, but I would add it after checking pagination and query performance first. For example, if the first page of patients or common search results are requested frequently, we could cache those responses using something like Redis. This would avoid hitting the database repeatedly for the same data.
+
+### Frontend Optimizations
+
+On the frontend, I would also avoid rendering all 50,000 patients at once. Even if the backend becomes faster, rendering a very large list in the browser can still make the page slow.
+
+The frontend should work with the paginated API. It could either show normal pagination controls or implement infinite scrolling. With infinite scrolling, the frontend fetches the next page only when the user scrolls near the bottom of the list.
+
+I would also consider virtualized rendering if the UI needs to display a long scrollable list. This means only the visible rows are rendered in the DOM, instead of rendering thousands of rows at the same time.
+
+I would also avoid making unnecessary API requests. For example, if the patient list has a search box, I would debounce the search input so the API is not called on every key press.
+
+### Monitoring
+
+For monitoring and troubleshooting, I would use logs and metrics from both the backend and frontend.
+
+On the backend, I would monitor slow API requests, database query time, number of queries per request, response size, and error rates. Django Debug Toolbar can be useful locally to inspect queries, while production tools like Sentry, Datadog, or application logs can help identify slow endpoints.
+
+On the database side, I would inspect slow queries and use query analysis tools such as `EXPLAIN` to understand whether indexes are being used properly.
+
+On the frontend, I would use the browser DevTools Network tab to check request time and response size. I would also use the Performance tab to check whether the page is slow because of rendering too many DOM elements.
+
+### Final Approach
+
+So, my approach would be:
+
+1. First identify where the time is being spent.
+2. Add backend pagination so the API does not return all 50,000 patients at once.
+3. Optimize database queries and add indexes where needed.
+4. Keep the serializer small for list responses.
+5. Add frontend pagination, infinite scrolling, or virtualized rendering.
+6. Add caching only after the main query and pagination issues are understood.
+7. Monitor the API and frontend continuously to catch slow requests early.
+
+This approach makes the fix more reliable because it first identifies the real bottleneck instead of adding caching before understanding the actual cause.
+
+
+
